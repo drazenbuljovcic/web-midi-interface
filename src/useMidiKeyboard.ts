@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from "react";
 import { getNoteWithOctave } from "./helpers/octave";
 import { useNotes } from "./state/notes";
+import { useOctave } from "./state/octave";
 import { Octave } from "./types/music";
-import { useOctave } from "./useOctave";
 
 type NoteType = {
   name: string;
@@ -20,8 +20,6 @@ const useMidiKeyboard = (): {
 
   const onMIDISuccess = useCallback(
     (midiAccess: any) => {
-      console.log(midiAccess);
-
       var inputs = midiAccess.inputs;
       var outputs = midiAccess.outputs;
 
@@ -30,15 +28,12 @@ const useMidiKeyboard = (): {
         octave: Octave,
         velocity: any
       ) => {
-        console.log({ note, octave });
-
         const fullNote = getNoteWithOctave(note, octave);
         activateNote(fullNote);
         setOctave(octave);
       };
 
       const noteOff = (note: NoteType["name"], octave: Octave) => {
-        console.log({ note, octave });
         const fullNote = getNoteWithOctave(note, octave);
         deactivateNote(fullNote);
       };
@@ -86,8 +81,6 @@ const useMidiKeyboard = (): {
       for (var input of midiAccess.inputs.values()) {
         input.onmidimessage = getMIDIMessage;
       }
-
-      console.log({ inputs, outputs });
     },
     [activateNote, deactivateNote, setOctave]
   );

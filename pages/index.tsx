@@ -4,8 +4,8 @@ import { withNotes, useNotes } from "../src/state/notes";
 import { NoteType, Octave } from "../src/types/music";
 import useComputerKeyboardMidiController from "../src/useComputerKeyboardMidiController";
 import useMidiKeyboard from "../src/useMidiKeyboard";
-import { useOctave, withOctave } from "../src/useOctave";
 import { getNoteWithOctave } from "../src/helpers/octave";
+import { useOctave, withOctave } from "../src/state/octave";
 
 const Key = ({
   note,
@@ -22,7 +22,6 @@ const Key = ({
 }) => {
   const { activateNote, deactivateNote } = useNotes();
   const handleKeyDown = (e: any) => {
-    console.log({ note: e.target.name });
     activateNote(e.target.name);
   };
 
@@ -38,6 +37,16 @@ const Key = ({
       }}
       onMouseDown={handleKeyDown}
       onMouseUp={handleKeyUp}
+      onKeyDown={(e) => {
+        if (e.key === " ") {
+          handleKeyDown(e);
+        }
+      }}
+      onKeyUp={(e) => {
+        if (e.key === " ") {
+          handleKeyUp(e);
+        }
+      }}
       name={getNoteWithOctave(note.name, octave, octaveUp)}
     >
       {getNoteWithOctave(note.name, octave, octaveUp)}
@@ -167,7 +176,7 @@ const Keyboard = ({
         note={{ name: "B" }}
         octave={octave}
       />
-      <Key
+      {/* <Key
         octaveUp
         isActive={
           !!activeNotes?.find(
@@ -178,7 +187,7 @@ const Keyboard = ({
         }
         note={{ name: "C" }}
         octave={octave}
-      />
+      /> */}
     </div>
   );
 };
@@ -186,15 +195,24 @@ const Keyboard = ({
 const KeyboardAudio = withOctave(
   withNotes(() => {
     const { notes: activeNotes } = useNotes();
-    const { octave: activeOctave } = useOctave();
+    const { octave: activeOctave, setOctave } = useOctave();
 
     useMidiKeyboard();
     useComputerKeyboardMidiController();
 
-    console.log({ activeNotes });
     return (
       <>
-        <span>octave: {activeOctave}</span>
+        <span>
+          octave:{" "}
+          <input
+            style={{ maxWidth: "30px" }}
+            value={activeOctave}
+            min={0}
+            max={8}
+            type="number"
+            onChange={(e) => setOctave(e.target.value as Octave)}
+          />{" "}
+        </span>
         <div style={{ display: "flex", overflowX: "auto" }}>
           <Keyboard key="0" activeNotes={activeNotes} octave="0" />
           <Keyboard key="1" activeNotes={activeNotes} octave="1" />

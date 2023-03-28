@@ -52,7 +52,6 @@ const getNoteFromKeyboard = (
 
   if (activeMIDIKey !== undefined) {
     note = getNoteWithOctave(NOTES[activeMIDIKey], octave, upOctave);
-    console.log({ note });
   }
   return note;
 };
