@@ -1,284 +1,223 @@
-// @ts-disable
-
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { Song, Track, Instrument } from "reactronica";
-import useMidi from "../src/useMidi";
+import { withNotes, useNotes } from "../src/state/notes";
+import { NoteType, Octave } from "../src/types/music";
+import useComputerKeyboardMidiController from "../src/useComputerKeyboardMidiController";
+import useMidiKeyboard from "../src/useMidiKeyboard";
+import { useOctave, withOctave } from "../src/useOctave";
+import { getNoteWithOctave } from "../src/helpers/octave";
 
-type NoteType = {
-  name: string;
-  velocity?: number;
-  duration?: number | string;
-  /** Use unique key to differentiate from same notes, otherwise it won't play */
-  key?: string | number;
-};
-type Octave = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
-
-
-// note octave
-// C<#> 3
-const withOctave = (note: string, octave: Octave, upOctave = false) => {
-  const output = note.includes("#")
-    ? `${note}${octave}`
-    : `${note}${Number(octave) + Number(upOctave)}`;
-  return output;
-};
-
-
-const Key = ({ note, octave, isActive = false, isMinorKey = false, onKeyDown, onKeyUp }: {
+const Key = ({
+  note,
+  octave,
+  octaveUp = false,
+  isActive = false,
+  isMinorKey = false,
+}: {
   isActive?: boolean;
   isMinorKey?: boolean;
   note: NoteType;
   octave: Octave;
-  onKeyDown: (note: NoteType[]) => void;
-  onKeyUp: () => void;
+  octaveUp?: boolean;
 }) => {
+  const { activateNote, deactivateNote } = useNotes();
   const handleKeyDown = (e: any) => {
     console.log({ note: e.target.name });
-    onKeyDown([{ name: e.target.name }]);
+    activateNote(e.target.name);
+  };
+
+  const handleKeyUp = (e: any) => {
+    deactivateNote(e.target.name);
   };
 
   return (
     <button
-      style={{marginBottom: isMinorKey ? '20px' : '', ...(isActive ? {backgroundColor:  'red' } : {})}}
+      style={{
+        marginBottom: isMinorKey ? "20px" : "",
+        ...(isActive ? { backgroundColor: "red" } : {}),
+      }}
       onMouseDown={handleKeyDown}
-      onMouseUp={onKeyUp}
-      name={withOctave(note.name, octave)}
+      onMouseUp={handleKeyUp}
+      name={getNoteWithOctave(note.name, octave, octaveUp)}
     >
-      {withOctave(note.name, octave)}
+      {getNoteWithOctave(note.name, octave, octaveUp)}
     </button>
-  )
+  );
 };
 
 const Keyboard = ({
   activeNotes,
   octave,
-  onKeyDown,
-  onKeyUp,
 }: {
   activeNotes: NoteType[];
   octave: Octave;
-  onKeyDown: (e: any) => void;
-  onKeyUp: () => void;
 }) => {
-  console.log({activeNotes, active: !!activeNotes?.find(note => note.name === withOctave("C", octave))})
   return (
     <div style={{ display: "flex" }}>
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("C", octave))} note={{ name: "C" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("C#", octave))} note={{ name: "C#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("D", octave))} note={{ name: "D" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("D#", octave))} note={{ name: "D#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("E", octave))} note={{ name: "E" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("F", octave))} note={{ name: "F" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("F#", octave))} note={{ name: "F#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("G", octave))} note={{ name: "G" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("G#", octave))} note={{ name: "G#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("A", octave))} note={{ name: "A" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("A#", octave))} note={{ name: "A#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("B", octave))} note={{ name: "B" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("C", String(Number(octave) + 1) as Octave))} note={{ name: "C" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
-    </div>
-  );
-};
-
-const useOctave = (): {
-  octave: Octave;
-  setOctave: (octave: Octave) => void;
-} => {
-  const [octave, setOctave] = useState<Octave>("0");
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key.toLowerCase() === "x") {
-      setOctave((prev) => {
-        const next = Number(prev) + 1;
-        return next > 7 ? "7" : next.toString() as Octave;
-      }); 
-    }
-    if (e.key.toLowerCase() === "z") {
-      setOctave((prev) => {
-        const next = Number(prev) - 1;
-        return next < 0 ? "0" : next.toString() as Octave;
-      });
-    }
-  }, []);
-
-  const handleKeyUp = useCallback((e: KeyboardEvent) => {}, []);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    }
-  }, [handleKeyDown, handleKeyUp]);
-
-  return { octave, setOctave };
-};
-
-const useKeyboardMidiController = ({ onKeyDown, onKeyUp }: {
-  onKeyDown: any;
-  onKeyUp: any;
-}): { octave: Octave } => {
-  const { octave } = useOctave();
-
-  const handlePause = useCallback((e: KeyboardEvent) => {
-    if (e.key === ' ') {
-      onKeyUp();
-    }
-  }, [onKeyUp]);
-
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    handlePause(e);
-    const keyboardKey = e.key.toLowerCase();
-    // keyboard keys mapping
-    const MINOR_KEYS = ['w', 'e', 't', 'y', 'u'];
-    const MAJOR_KEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k'];
-
-    if ([...MINOR_KEYS, ...MAJOR_KEYS].includes(keyboardKey)) {
-
-      const getNote = (): string | undefined => {
-        const getActiveMIDIKey = () => {
-          const keyMap: Record<string, {activeMIDIKey: number, upOctave?: boolean}> = {
-            a: { activeMIDIKey: 0 },
-            w: { activeMIDIKey: 1 },
-            s: { activeMIDIKey: 2 },
-            e: { activeMIDIKey: 3 },
-            d: { activeMIDIKey: 4 },
-            f: { activeMIDIKey: 5 },
-            t: { activeMIDIKey: 6 },
-            g: { activeMIDIKey: 7 },
-            y: { activeMIDIKey: 8 },
-            h: { activeMIDIKey: 9 },
-            u: { activeMIDIKey: 10 },
-            j: { activeMIDIKey: 11 },
-            k: { activeMIDIKey: 12, upOctave: true },
-          }
-          return keyMap[keyboardKey];
-        };
-
-        const {activeMIDIKey, upOctave} = getActiveMIDIKey();
-
-        let note;
-        // last C up octave
-        const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C'];
-        if (activeMIDIKey !== undefined) {
-          note = withOctave(NOTES[activeMIDIKey], octave, upOctave)
-          console.log({note})
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("C", octave)
+          )
         }
-        return note;
-      };
-
-      const note = getNote();
-      if (note) {
-        onKeyDown([{ name: note }]);
-      }
-    }
-  }, [onKeyDown, handlePause, octave]);
-
-  const handleKeyUp = useCallback(() => {
-    onKeyUp();
-  }, [onKeyUp])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    }
-  }, [handleKeyDown, handleKeyUp]);
-
-  return { octave };
-};
-
-const KeyboardAudio = () => {
-  useMidi();
-  const [notes, setNotes] = useState<NoteType[]>([]);
-
-  const handleNoteDown = useCallback((notes: NoteType[]) => setNotes(notes), []);
-  const handleNoteUp = useCallback(() => setNotes([]), []);
-
-  const {octave: activeOctave} = useKeyboardMidiController({ onKeyDown: handleNoteDown, onKeyUp: handleNoteUp });
-  console.log({notes})
-  return (
-    <div onMouseUp={handleNoteUp}>
-      <span>octave: {activeOctave}</span>
-      <Keyboard
-        key="0"
-        activeNotes={notes}
-        octave="0"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+        note={{ name: "C" }}
+        octave={octave}
       />
-      <Keyboard
-        key="1"
-        activeNotes={notes}
-        octave="1"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isMinorKey
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("C#", octave)
+          )
+        }
+        note={{ name: "C#" }}
+        octave={octave}
       />
-      <Keyboard
-        key="2"
-        activeNotes={notes}
-        octave="2"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("D", octave)
+          )
+        }
+        note={{ name: "D" }}
+        octave={octave}
       />
-      <Keyboard
-        key="3"
-        activeNotes={notes}
-        octave="3"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isMinorKey
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("D#", octave)
+          )
+        }
+        note={{ name: "D#" }}
+        octave={octave}
       />
-      <Keyboard
-        key="4"
-        activeNotes={notes}
-        octave="4"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("E", octave)
+          )
+        }
+        note={{ name: "E" }}
+        octave={octave}
       />
-      <Keyboard
-        key="5"
-        activeNotes={notes}
-        octave="5"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("F", octave)
+          )
+        }
+        note={{ name: "F" }}
+        octave={octave}
       />
-      <Keyboard
-        key="6"
-        activeNotes={notes}
-        octave="6"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isMinorKey
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("F#", octave)
+          )
+        }
+        note={{ name: "F#" }}
+        octave={octave}
       />
-      <Keyboard
-        key="7"
-        activeNotes={notes}
-        octave="7"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("G", octave)
+          )
+        }
+        note={{ name: "G" }}
+        octave={octave}
       />
-      <Keyboard
-        key="8"
-        activeNotes={notes}
-        octave="8"
-        onKeyDown={handleNoteDown}
-        onKeyUp={handleNoteUp}
+      <Key
+        isMinorKey
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("G#", octave)
+          )
+        }
+        note={{ name: "G#" }}
+        octave={octave}
       />
-
-      {JSON.stringify(notes[0])}
-      <Song>
-        <Track>
-          <Instrument type="synth" notes={notes} />
-        </Track>
-      </Song>
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("A", octave)
+          )
+        }
+        note={{ name: "A" }}
+        octave={octave}
+      />
+      <Key
+        isMinorKey
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("A#", octave)
+          )
+        }
+        note={{ name: "A#" }}
+        octave={octave}
+      />
+      <Key
+        isActive={
+          !!activeNotes?.find(
+            (note) => note.name === getNoteWithOctave("B", octave)
+          )
+        }
+        note={{ name: "B" }}
+        octave={octave}
+      />
+      <Key
+        octaveUp
+        isActive={
+          !!activeNotes?.find(
+            (note) =>
+              note.name ===
+              getNoteWithOctave("C", String(Number(octave) + 1) as Octave)
+          )
+        }
+        note={{ name: "C" }}
+        octave={octave}
+      />
     </div>
   );
 };
+
+const KeyboardAudio = withOctave(
+  withNotes(() => {
+    const { notes: activeNotes } = useNotes();
+    const { octave: activeOctave } = useOctave();
+
+    useMidiKeyboard();
+    useComputerKeyboardMidiController();
+
+    console.log({ activeNotes });
+    return (
+      <>
+        <span>octave: {activeOctave}</span>
+        <div style={{ display: "flex", overflowX: "auto" }}>
+          <Keyboard key="0" activeNotes={activeNotes} octave="0" />
+          <Keyboard key="1" activeNotes={activeNotes} octave="1" />
+          <Keyboard key="2" activeNotes={activeNotes} octave="2" />
+          <Keyboard key="3" activeNotes={activeNotes} octave="3" />
+          <Keyboard key="4" activeNotes={activeNotes} octave="4" />
+          <Keyboard key="5" activeNotes={activeNotes} octave="5" />
+          <Keyboard key="6" activeNotes={activeNotes} octave="6" />
+          <Keyboard key="7" activeNotes={activeNotes} octave="7" />
+          <Keyboard key="8" activeNotes={activeNotes} octave="8" />
+        </div>
+
+        {JSON.stringify(activeNotes)}
+
+        <Song>
+          <Track>
+            <Instrument type="synth" notes={activeNotes} />
+          </Track>
+        </Song>
+      </>
+    );
+  })
+);
 
 const App = () => {
   return (
