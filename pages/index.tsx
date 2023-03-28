@@ -1,123 +1,259 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from '../styles/Home.module.css'
+import { useCallback, useEffect, useState } from "react";
+import { Song, Track, Instrument, Effect } from "reactronica";
 
-const inter = Inter({ subsets: ['latin'] })
+const Keyboard = ({
+  octave,
+  onMouseDown,
+  onMouseUp,
+}: {
+  octave: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+  onMouseDown: (e: any) => void;
+  onMouseUp: () => void;
+}) => {
+  const handleMouseDown = (e) => {
+    console.log({ note: e.target.name });
+    onMouseDown([{ name: e.target.name }]);
+  };
 
-export default function Home() {
+  // note octave
+  // C<#> 3
+  const withOctave = (note: string, upOctave = false) => {
+    const output = note.includes("#")
+      ? `${note.replace("#", "")}${octave}#`
+      : `${note}${Number(octave) + Number(upOctave)}`;
+    return output;
+  };
+
+  return (
+    <div style={{ display: "flex" }}>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("C")}
+      >
+        {withOctave("C")}
+      </button>
+      <button
+        style={{ marginBottom: "20px" }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("C#")}
+      >
+        {withOctave("C#")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={`D${octave}`}
+      >
+        {withOctave("D")}
+      </button>
+      <button
+        style={{ marginBottom: "20px" }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave(`D#`)}
+      >
+        {withOctave("D#")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("E")}
+      >
+        {withOctave("E")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("F")}
+      >
+        {withOctave("F")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("G")}
+      >
+        {withOctave("G")}
+      </button>
+      <button
+        style={{ marginBottom: "20px" }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("G#")}
+      >
+        {withOctave("G#")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("A")}
+      >
+        {withOctave("A")}
+      </button>
+      <button
+        style={{ marginBottom: "20px" }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("A#")}
+      >
+        {withOctave("A#")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("B")}
+      >
+        {withOctave("B")}
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onMouseUp={onMouseUp}
+        name={withOctave("C", true)}
+      >
+        {withOctave("C", true)}
+      </button>
+    </div>
+  );
+};
+const useMidi = () => {
+  const onMIDISuccess = useCallback((midiAccess) => {
+    console.log(midiAccess);
+
+    var inputs = midiAccess.inputs;
+    var outputs = midiAccess.outputs;
+
+    const noteOn = (note, velocity) => {
+      console.log({ note, velocity });
+    };
+    const noteOff = (note) => {
+      console.log({ note });
+    };
+
+    function getMIDIMessage(message) {
+      var command = message.data[0];
+      var note = message.data[1];
+      var velocity = message.data.length > 2 ? message.data[2] : 0; // a velocity value might not be included with a noteOff command
+
+      switch (command) {
+        case 144: // noteOn
+          if (velocity > 0) {
+            noteOn(note, velocity);
+          } else {
+            noteOff(note);
+          }
+          break;
+        case 128: // noteOff
+          noteOff(note);
+          break;
+        // we could easily expand this switch statement to cover other types of commands such as controllers or sysex
+      }
+    }
+
+    // function getMIDIMessage(message) {
+    //   console.log(message);
+    // }
+
+    for (var input of midiAccess.inputs.values()) {
+      input.onmidimessage = getMIDIMessage;
+    }
+
+    console.log({ inputs, outputs });
+  }, []);
+
+  const onMIDIFailure = useCallback(() => {
+    console.log("Could not access your MIDI devices.");
+  }, []);
+
+  useEffect(() => {
+    if (
+      typeof navigator !== "undefined" &&
+      (navigator as unknown as { requestMIDIAccess: () => {} })
+        .requestMIDIAccess
+    ) {
+      console.log("This browser supports WebMIDI!");
+    } else {
+      console.log("WebMIDI is not supported in this browser.");
+    }
+
+    if (typeof navigator !== "undefined") {
+      (navigator as unknown as { requestMIDIAccess: () => Promise<any> })
+        .requestMIDIAccess()
+        .then(onMIDISuccess, onMIDIFailure);
+    }
+  }, [onMIDISuccess, onMIDIFailure]);
+};
+
+// const inter = Inter({ subsets: ['latin'] })
+const KeyboardAudio = () => {
+  useMidi();
+  const [notes, setNotes] = useState([]);
+  console.log({ notes });
   return (
     <>
-      <Head>
-        <title>Create Next App</title>
-        <meta name="description" content="Generated by create next app" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
+      <Keyboard
+        octave="0"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="1"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="2"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="3"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="4"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="5"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="6"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="7"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
+      <Keyboard
+        octave="8"
+        onMouseDown={(notes) => setNotes(notes)}
+        onMouseUp={() => setNotes([])}
+      />
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+      {JSON.stringify(notes[0])}
+      <Song>
+        <Track>
+          <Instrument key={1} type="amSynth" notes={notes} />
+        </Track>
+      </Song>
     </>
-  )
-}
+  );
+};
+
+const App = () => {
+  return (
+    <>
+      <KeyboardAudio />
+    </>
+  );
+};
+
+export default App;
