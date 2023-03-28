@@ -1,3 +1,5 @@
+// @ts-disable
+
 import { useCallback, useEffect, useState } from "react";
 import { Song, Track, Instrument, Effect } from "reactronica";
 
@@ -10,7 +12,7 @@ const Keyboard = ({
   onMouseDown: (e: any) => void;
   onMouseUp: () => void;
 }) => {
-  const handleMouseDown = (e) => {
+  const handleMouseDown = (e: any) => {
     console.log({ note: e.target.name });
     onMouseDown([{ name: e.target.name }]);
   };
@@ -118,20 +120,20 @@ const Keyboard = ({
   );
 };
 const useMidi = () => {
-  const onMIDISuccess = useCallback((midiAccess) => {
+  const onMIDISuccess = useCallback((midiAccess: any) => {
     console.log(midiAccess);
 
     var inputs = midiAccess.inputs;
     var outputs = midiAccess.outputs;
 
-    const noteOn = (note, velocity) => {
+    const noteOn = (note: any, velocity: any) => {
       console.log({ note, velocity });
     };
-    const noteOff = (note) => {
+    const noteOff = (note: any) => {
       console.log({ note });
     };
 
-    function getMIDIMessage(message) {
+    function getMIDIMessage(message: any) {
       var command = message.data[0];
       var note = message.data[1];
       var velocity = message.data.length > 2 ? message.data[2] : 0; // a velocity value might not be included with a noteOff command
