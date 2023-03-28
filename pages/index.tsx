@@ -1,252 +1,282 @@
 // @ts-disable
 
-import { useCallback, useEffect, useState } from "react";
-import { Song, Track, Instrument, Effect } from "reactronica";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Song, Track, Instrument } from "reactronica";
+import useMidi from "../src/useMidi";
 
-const Keyboard = ({
-  octave,
-  onMouseDown,
-  onMouseUp,
-}: {
-  octave: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
-  onMouseDown: (e: any) => void;
-  onMouseUp: () => void;
+type NoteType = {
+  name: string;
+  velocity?: number;
+  duration?: number | string;
+  /** Use unique key to differentiate from same notes, otherwise it won't play */
+  key?: string | number;
+};
+type Octave = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+
+
+// note octave
+// C<#> 3
+const withOctave = (note: string, octave: Octave, upOctave = false) => {
+  const output = note.includes("#")
+    ? `${note}${octave}`
+    : `${note}${Number(octave) + Number(upOctave)}`;
+  return output;
+};
+
+
+const Key = ({ note, octave, isActive = false, isMinorKey = false, onKeyDown, onKeyUp }: {
+  isActive?: boolean;
+  isMinorKey?: boolean;
+  note: NoteType;
+  octave: Octave;
+  onKeyDown: (note: NoteType[]) => void;
+  onKeyUp: () => void;
 }) => {
-  const handleMouseDown = (e: any) => {
+  const handleKeyDown = (e: any) => {
     console.log({ note: e.target.name });
-    onMouseDown([{ name: e.target.name }]);
-  };
-
-  // note octave
-  // C<#> 3
-  const withOctave = (note: string, upOctave = false) => {
-    const output = note.includes("#")
-      ? `${note.replace("#", "")}${octave}#`
-      : `${note}${Number(octave) + Number(upOctave)}`;
-    return output;
+    onKeyDown([{ name: e.target.name }]);
   };
 
   return (
+    <button
+      style={{marginBottom: isMinorKey ? '20px' : '', ...(isActive ? {backgroundColor:  'red' } : {})}}
+      onMouseDown={handleKeyDown}
+      onMouseUp={onKeyUp}
+      name={withOctave(note.name, octave)}
+    >
+      {withOctave(note.name, octave)}
+    </button>
+  )
+};
+
+const Keyboard = ({
+  activeNotes,
+  octave,
+  onKeyDown,
+  onKeyUp,
+}: {
+  activeNotes: NoteType[];
+  octave: Octave;
+  onKeyDown: (e: any) => void;
+  onKeyUp: () => void;
+}) => {
+  console.log({activeNotes, active: !!activeNotes?.find(note => note.name === withOctave("C", octave))})
+  return (
     <div style={{ display: "flex" }}>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("C")}
-      >
-        {withOctave("C")}
-      </button>
-      <button
-        style={{ marginBottom: "20px" }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("C#")}
-      >
-        {withOctave("C#")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={`D${octave}`}
-      >
-        {withOctave("D")}
-      </button>
-      <button
-        style={{ marginBottom: "20px" }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave(`D#`)}
-      >
-        {withOctave("D#")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("E")}
-      >
-        {withOctave("E")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("F")}
-      >
-        {withOctave("F")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("G")}
-      >
-        {withOctave("G")}
-      </button>
-      <button
-        style={{ marginBottom: "20px" }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("G#")}
-      >
-        {withOctave("G#")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("A")}
-      >
-        {withOctave("A")}
-      </button>
-      <button
-        style={{ marginBottom: "20px" }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("A#")}
-      >
-        {withOctave("A#")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("B")}
-      >
-        {withOctave("B")}
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={onMouseUp}
-        name={withOctave("C", true)}
-      >
-        {withOctave("C", true)}
-      </button>
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("C", octave))} note={{ name: "C" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("C#", octave))} note={{ name: "C#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("D", octave))} note={{ name: "D" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("D#", octave))} note={{ name: "D#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("E", octave))} note={{ name: "E" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("F", octave))} note={{ name: "F" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("F#", octave))} note={{ name: "F#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("G", octave))} note={{ name: "G" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("G#", octave))} note={{ name: "G#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("A", octave))} note={{ name: "A" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isMinorKey isActive={!!activeNotes?.find(note => note.name === withOctave("A#", octave))} note={{ name: "A#" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("B", octave))} note={{ name: "B" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Key isActive={!!activeNotes?.find(note => note.name === withOctave("C", String(Number(octave) + 1) as Octave))} note={{ name: "C" }} octave={octave} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
     </div>
   );
 };
-const useMidi = () => {
-  const onMIDISuccess = useCallback((midiAccess: any) => {
-    console.log(midiAccess);
 
-    var inputs = midiAccess.inputs;
-    var outputs = midiAccess.outputs;
+const useOctave = (): {
+  octave: Octave;
+  setOctave: (octave: Octave) => void;
+} => {
+  const [octave, setOctave] = useState<Octave>("0");
 
-    const noteOn = (note: any, velocity: any) => {
-      console.log({ note, velocity });
-    };
-    const noteOff = (note: any) => {
-      console.log({ note });
-    };
-
-    function getMIDIMessage(message: any) {
-      var command = message.data[0];
-      var note = message.data[1];
-      var velocity = message.data.length > 2 ? message.data[2] : 0; // a velocity value might not be included with a noteOff command
-
-      switch (command) {
-        case 144: // noteOn
-          if (velocity > 0) {
-            noteOn(note, velocity);
-          } else {
-            noteOff(note);
-          }
-          break;
-        case 128: // noteOff
-          noteOff(note);
-          break;
-        // we could easily expand this switch statement to cover other types of commands such as controllers or sysex
-      }
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key.toLowerCase() === "x") {
+      setOctave((prev) => {
+        const next = Number(prev) + 1;
+        return next > 7 ? "7" : next.toString() as Octave;
+      }); 
     }
-
-    // function getMIDIMessage(message) {
-    //   console.log(message);
-    // }
-
-    for (var input of midiAccess.inputs.values()) {
-      input.onmidimessage = getMIDIMessage;
+    if (e.key.toLowerCase() === "z") {
+      setOctave((prev) => {
+        const next = Number(prev) - 1;
+        return next < 0 ? "0" : next.toString() as Octave;
+      });
     }
-
-    console.log({ inputs, outputs });
   }, []);
 
-  const onMIDIFailure = useCallback(() => {
-    console.log("Could not access your MIDI devices.");
-  }, []);
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {}, []);
 
   useEffect(() => {
-    if (
-      typeof navigator !== "undefined" &&
-      (navigator as unknown as { requestMIDIAccess: () => {} })
-        .requestMIDIAccess
-    ) {
-      console.log("This browser supports WebMIDI!");
-    } else {
-      console.log("WebMIDI is not supported in this browser.");
-    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
-    if (typeof navigator !== "undefined") {
-      (navigator as unknown as { requestMIDIAccess: () => Promise<any> })
-        .requestMIDIAccess()
-        .then(onMIDISuccess, onMIDIFailure);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     }
-  }, [onMIDISuccess, onMIDIFailure]);
+  }, [handleKeyDown, handleKeyUp]);
+
+  return { octave, setOctave };
 };
 
-// const inter = Inter({ subsets: ['latin'] })
+const useKeyboardMidiController = ({ onKeyDown, onKeyUp }: {
+  onKeyDown: any;
+  onKeyUp: any;
+}): { octave: Octave } => {
+  const { octave } = useOctave();
+
+  const handlePause = useCallback((e: KeyboardEvent) => {
+    if (e.key === ' ') {
+      onKeyUp();
+    }
+  }, [onKeyUp]);
+
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    handlePause(e);
+    const keyboardKey = e.key.toLowerCase();
+    // keyboard keys mapping
+    const MINOR_KEYS = ['w', 'e', 't', 'y', 'u'];
+    const MAJOR_KEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k'];
+
+    if ([...MINOR_KEYS, ...MAJOR_KEYS].includes(keyboardKey)) {
+
+      const getNote = (): string | undefined => {
+        const getActiveMIDIKey = () => {
+          const keyMap: Record<string, {activeMIDIKey: number, upOctave?: boolean}> = {
+            a: { activeMIDIKey: 0 },
+            w: { activeMIDIKey: 1 },
+            s: { activeMIDIKey: 2 },
+            e: { activeMIDIKey: 3 },
+            d: { activeMIDIKey: 4 },
+            f: { activeMIDIKey: 5 },
+            t: { activeMIDIKey: 6 },
+            g: { activeMIDIKey: 7 },
+            y: { activeMIDIKey: 8 },
+            h: { activeMIDIKey: 9 },
+            u: { activeMIDIKey: 10 },
+            j: { activeMIDIKey: 11 },
+            k: { activeMIDIKey: 12, upOctave: true },
+          }
+          return keyMap[keyboardKey];
+        };
+
+        const {activeMIDIKey, upOctave} = getActiveMIDIKey();
+
+        let note;
+        // last C up octave
+        const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C'];
+        if (activeMIDIKey !== undefined) {
+          note = withOctave(NOTES[activeMIDIKey], octave, upOctave)
+          console.log({note})
+        }
+        return note;
+      };
+
+      const note = getNote();
+      if (note) {
+        onKeyDown([{ name: note }]);
+      }
+    }
+  }, [onKeyDown, handlePause, octave]);
+
+  const handleKeyUp = useCallback(() => {
+    onKeyUp();
+  }, [onKeyUp])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    }
+  }, [handleKeyDown, handleKeyUp]);
+
+  return { octave };
+};
+
 const KeyboardAudio = () => {
   useMidi();
-  const [notes, setNotes] = useState([]);
-  console.log({ notes });
+  const [notes, setNotes] = useState<NoteType[]>([]);
+
+  const handleNoteDown = useCallback((notes: NoteType[]) => setNotes(notes), []);
+  const handleNoteUp = useCallback(() => setNotes([]), []);
+
+  const {octave: activeOctave} = useKeyboardMidiController({ onKeyDown: handleNoteDown, onKeyUp: handleNoteUp });
+  console.log({notes})
   return (
-    <>
+    <div onMouseUp={handleNoteUp}>
+      <span>octave: {activeOctave}</span>
       <Keyboard
+        key="0"
+        activeNotes={notes}
         octave="0"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="1"
+        activeNotes={notes}
         octave="1"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="2"
+        activeNotes={notes}
         octave="2"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="3"
+        activeNotes={notes}
         octave="3"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="4"
+        activeNotes={notes}
         octave="4"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="5"
+        activeNotes={notes}
         octave="5"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="6"
+        activeNotes={notes}
         octave="6"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="7"
+        activeNotes={notes}
         octave="7"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
       <Keyboard
+        key="8"
+        activeNotes={notes}
         octave="8"
-        onMouseDown={(notes) => setNotes(notes)}
-        onMouseUp={() => setNotes([])}
+        onKeyDown={handleNoteDown}
+        onKeyUp={handleNoteUp}
       />
 
       {JSON.stringify(notes[0])}
       <Song>
         <Track>
-          <Instrument key={1} type="amSynth" notes={notes} />
+          <Instrument type="synth" notes={notes} />
         </Track>
       </Song>
-    </>
+    </div>
   );
 };
 
