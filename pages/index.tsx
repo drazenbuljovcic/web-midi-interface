@@ -42,6 +42,8 @@ const Key = ({ note, octave, isActive = false, isMinorKey = false, onKeyDown, on
       style={{marginBottom: isMinorKey ? '20px' : '', ...(isActive ? {backgroundColor:  'red' } : {})}}
       onMouseDown={handleKeyDown}
       onMouseUp={onKeyUp}
+      onTouchStart={handleKeyDown}
+      onTouchEnd={onKeyUp}
       name={withOctave(note.name, octave)}
     >
       {withOctave(note.name, octave)}
