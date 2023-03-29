@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import clsx from 'clsx';
 import { Song, Track, Instrument } from "reactronica";
 import { withNotes, useNotes } from "../src/state/notes";
 import { NoteType, Octave } from "../src/types/music";
@@ -13,12 +13,14 @@ const Key = ({
   octaveUp = false,
   isActive = false,
   isMinorKey = false,
+  doesNotHaveSharp = false,
 }: {
   isActive?: boolean;
   isMinorKey?: boolean;
   note: NoteType;
   octave: Octave;
   octaveUp?: boolean;
+  doesNotHaveSharp?: boolean;
 }) => {
   const { activateNote, deactivateNote } = useNotes();
   const handleKeyDown = (e: any) => {
@@ -31,10 +33,14 @@ const Key = ({
 
   return (
     <button
-      style={{
-        marginBottom: isMinorKey ? "20px" : "",
-        ...(isActive ? { backgroundColor: "red" } : {}),
-      }}
+      className={clsx({
+        "flex justify-center w-20 h-40 border-2 border-black": true,
+        "w-14 h-28 z-10 ml-[-1.8rem] mr-[-1.8rem]": isMinorKey,
+        'bg-red-500': isActive,
+        'bg-black text-white': !isActive && isMinorKey,
+        'bg-white text-black': !isActive && !isMinorKey,
+        'border-r-0': doesNotHaveSharp,
+      })}
       onMouseDown={handleKeyDown}
       onMouseUp={handleKeyUp}
       onTouchStart={handleKeyDown}
@@ -51,7 +57,9 @@ const Key = ({
       }}
       name={getNoteWithOctave(note.name, octave, octaveUp)}
     >
-      {getNoteWithOctave(note.name, octave, octaveUp)}
+      <span className="self-end">
+        {note.name}
+      </span>
     </button>
   );
 };
@@ -64,7 +72,7 @@ const Keyboard = ({
   octave: Octave;
 }) => {
   return (
-    <div style={{ display: "flex" }}>
+    <div className='flex'>
       <Key
         isActive={
           !!activeNotes?.find(
@@ -111,6 +119,7 @@ const Keyboard = ({
         }
         note={{ name: "E" }}
         octave={octave}
+        doesNotHaveSharp
       />
       <Key
         isActive={
@@ -177,6 +186,7 @@ const Keyboard = ({
         }
         note={{ name: "B" }}
         octave={octave}
+        doesNotHaveSharp
       />
       {/* <Key
         octaveUp
@@ -215,17 +225,19 @@ const KeyboardAudio = withOctave(
             onChange={(e) => setOctave(e.target.value as Octave)}
           />{" "}
         </span>
-        <div style={{ display: "flex", overflowX: "auto" }}>
-          <Keyboard key="0" activeNotes={activeNotes} octave="0" />
-          <Keyboard key="1" activeNotes={activeNotes} octave="1" />
-          <Keyboard key="2" activeNotes={activeNotes} octave="2" />
-          <Keyboard key="3" activeNotes={activeNotes} octave="3" />
-          <Keyboard key="4" activeNotes={activeNotes} octave="4" />
-          <Keyboard key="5" activeNotes={activeNotes} octave="5" />
-          <Keyboard key="6" activeNotes={activeNotes} octave="6" />
-          <Keyboard key="7" activeNotes={activeNotes} octave="7" />
-          <Keyboard key="8" activeNotes={activeNotes} octave="8" />
-        </div>
+        <main className='h-full flex items-center sm-no-center'>
+          <div className="flex flex-row bg-gray-500 p-2">
+            <Keyboard key="0" activeNotes={activeNotes} octave="0" />
+            <Keyboard key="1" activeNotes={activeNotes} octave="1" />
+             <Keyboard key="2" activeNotes={activeNotes} octave="2" />
+            <Keyboard key="3" activeNotes={activeNotes} octave="3" />
+            <Keyboard key="4" activeNotes={activeNotes} octave="4" />
+            <Keyboard key="5" activeNotes={activeNotes} octave="5" />
+            <Keyboard key="6" activeNotes={activeNotes} octave="6" />
+            <Keyboard key="7" activeNotes={activeNotes} octave="7" />
+            <Keyboard key="8" activeNotes={activeNotes} octave="8" />
+          </div>
+        </main>
 
         {JSON.stringify(activeNotes)}
 
