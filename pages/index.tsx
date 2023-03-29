@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import clsx from "clsx";
 import { Song, Track, Instrument } from "reactronica";
 import { withNotes, useNotes } from "../src/state/notes";
 import { NoteType, Octave } from "../src/types/music";
@@ -34,12 +34,13 @@ const Key = ({
   return (
     <button
       className={clsx({
-        "flex justify-center w-20 h-40 border-2 border-black": true,
-        "w-14 h-28 z-10 ml-[-1.8rem] mr-[-1.8rem]": isMinorKey,
-        'bg-red-500': isActive,
-        'bg-black text-white': !isActive && isMinorKey,
-        'bg-white text-black': !isActive && !isMinorKey,
-        'border-r-0': doesNotHaveSharp,
+        "flex w-20 justify-center border-2 border-black": true,
+        "z-10 ml-[-1.2rem] mr-[-1.2rem] h-28 w-9": isMinorKey,
+        "h-40": !isMinorKey,
+        "bg-red-500": isActive,
+        "bg-black text-white": !isActive && isMinorKey,
+        "bg-white text-black": !isActive && !isMinorKey,
+        "border-r-0": doesNotHaveSharp,
       })}
       onMouseDown={handleKeyDown}
       onMouseUp={handleKeyUp}
@@ -57,9 +58,7 @@ const Key = ({
       }}
       name={getNoteWithOctave(note.name, octave, octaveUp)}
     >
-      <span className="self-end">
-        {note.name}
-      </span>
+      <span className="self-end">{note.name}</span>
     </button>
   );
 };
@@ -72,7 +71,7 @@ const Keyboard = ({
   octave: Octave;
 }) => {
   return (
-    <div className='flex'>
+    <div className="flex">
       <Key
         isActive={
           !!activeNotes?.find(
@@ -225,11 +224,11 @@ const KeyboardAudio = withOctave(
             onChange={(e) => setOctave(e.target.value as Octave)}
           />{" "}
         </span>
-        <main className='h-full flex items-center sm-no-center'>
+        <main className="sm-no-center flex h-full items-center">
           <div className="flex flex-row bg-gray-500 p-2">
             <Keyboard key="0" activeNotes={activeNotes} octave="0" />
             <Keyboard key="1" activeNotes={activeNotes} octave="1" />
-             <Keyboard key="2" activeNotes={activeNotes} octave="2" />
+            <Keyboard key="2" activeNotes={activeNotes} octave="2" />
             <Keyboard key="3" activeNotes={activeNotes} octave="3" />
             <Keyboard key="4" activeNotes={activeNotes} octave="4" />
             <Keyboard key="5" activeNotes={activeNotes} octave="5" />
