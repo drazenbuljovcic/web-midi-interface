@@ -40,6 +40,7 @@ export const ScreenOrientation = ({
         await element.current?.requestFullscreen();
         await window.screen?.orientation?.lock("landscape-primary");
       } catch (e) {
+        alert(e);
         caughtError = true;
       }
 
