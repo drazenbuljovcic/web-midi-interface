@@ -18,7 +18,11 @@ export const ScreenOrientation = () => {
   );
 
   const handleOrientationChange = () => {
-    window.screen?.orientation?.lock("landscape-primary").catch((e) => {});
+    window.screen?.orientation
+      ?.lock("landscape-primary")
+      .catch(function (error) {
+        alert(error);
+      });
   };
 
   return (
