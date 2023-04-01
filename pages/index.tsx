@@ -6,7 +6,7 @@ import useComputerKeyboardMidiController from "../src/useComputerKeyboardMidiCon
 import useMidiKeyboard from "../src/useMidiKeyboard";
 import { getNoteWithOctave } from "../src/helpers/octave";
 import { useOctave, withOctave } from "../src/state/octave";
-import useScreenOrientation from "../src/helpers/useScreenOrientation";
+import { ScreenOrientation } from "../src/helpers/ScreenOrientation";
 
 const Key = ({
   note,
@@ -225,6 +225,7 @@ const KeyboardAudio = withOctave(
             onChange={(e) => setOctave(e.target.value as Octave)}
           />{" "}
         </span>
+        <ScreenOrientation />
         <main className="sm-no-center flex h-full items-center">
           <div className="flex flex-row bg-gray-500 p-2">
             <Keyboard key="0" activeNotes={activeNotes} octave="0" />
@@ -252,7 +253,7 @@ const KeyboardAudio = withOctave(
 );
 
 const App = () => {
-  useScreenOrientation();
+  // useScreenOrientation();
 
   return (
     <>
