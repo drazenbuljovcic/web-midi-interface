@@ -6,6 +6,7 @@ import useComputerKeyboardMidiController from "../src/useComputerKeyboardMidiCon
 import useMidiKeyboard from "../src/useMidiKeyboard";
 import { getNoteWithOctave } from "../src/helpers/octave";
 import { useOctave, withOctave } from "../src/state/octave";
+import useScreenOrientation from "../src/helpers/useScreenOrientation";
 
 const Key = ({
   note,
@@ -251,6 +252,8 @@ const KeyboardAudio = withOctave(
 );
 
 const App = () => {
+  useScreenOrientation();
+
   return (
     <>
       <KeyboardAudio />
