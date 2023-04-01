@@ -40,6 +40,7 @@ export const ScreenOrientation = ({
       try {
         await window.screen?.orientation?.lock("landscape-primary");
       } catch (e) {
+        alert(e);
         caughtError = true;
       }
 
@@ -60,7 +61,7 @@ export const ScreenOrientation = ({
         alert(error);
       });
   }, [element]);
-  console.log({ canChangeOrientation });
+
   if (!canChangeOrientation) {
     return null;
   }
