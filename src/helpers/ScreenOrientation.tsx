@@ -3,7 +3,6 @@ import {
   RefObject,
   useCallback,
   useEffect,
-  useMemo,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -38,6 +37,7 @@ export const ScreenOrientation = ({
       }
 
       try {
+        element.current?.requestFullscreen();
         await window.screen?.orientation?.lock("landscape-primary");
       } catch (e) {
         alert(e);
