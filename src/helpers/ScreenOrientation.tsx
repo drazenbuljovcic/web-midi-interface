@@ -29,28 +29,28 @@ export const ScreenOrientation = ({
 
   const [canChangeOrientation, setCanChangeOrientation] = useState(false);
 
-  useEffect(() => {
-    const tryOrientationChange = async () => {
-      let caughtError = false;
-      if (typeof window === "undefined") {
-        return caughtError;
-      }
+  // useEffect(() => {
+  //   const tryOrientationChange = async () => {
+  //     let caughtError = false;
+  //     if (typeof window === "undefined") {
+  //       return caughtError;
+  //     }
 
-      try {
-        element.current?.requestFullscreen();
-        await window.screen?.orientation?.lock("landscape-primary");
-      } catch (e) {
-        alert(e);
-        caughtError = true;
-      }
+  //     try {
+  //       // element.current?.requestFullscreen();
+  //       await window.screen?.orientation?.lock("landscape-primary");
+  //     } catch (e) {
+  //       alert(e);
+  //       caughtError = true;
+  //     }
 
-      return !caughtError;
-    };
+  //     return !caughtError;
+  //   };
 
-    tryOrientationChange().then((can) => {
-      setCanChangeOrientation(can);
-    });
-  }, []);
+  //   tryOrientationChange().then((can) => {
+  //     setCanChangeOrientation(can);
+  //   });
+  // }, [element]);
 
   const handleOrientationChange = useCallback(() => {
     element.current?.requestFullscreen();
@@ -62,9 +62,9 @@ export const ScreenOrientation = ({
       });
   }, [element]);
 
-  if (!canChangeOrientation) {
-    return null;
-  }
+  // if (!canChangeOrientation) {
+  //   return null;
+  // }
 
   return (
     <button className={clsx("p-2")} onClick={handleOrientationChange}>
