@@ -14,11 +14,13 @@
     "@types/react": "18.0.30",
     "@types/react-dom": "18.0.11",
     "@types/webmidi": "^2.0.7",
+    "add": "^2.0.6",
     "autoprefixer": "^10.4.14",
     "clsx": "^1.2.1",
     "clx": "^1.0.0",
     "eslint": "8.36.0",
     "eslint-config-next": "13.2.4",
+    "ismobilejs": "^1.1.1",
     "next": "13.2.4",
     "postcss": "^8.4.21",
     "prettier": "^2.8.7",
@@ -27,6 +29,7 @@
     "react-dom": "18.2.0",
     "reactronica": "^0.8.1-canary.0",
     "tailwindcss": "^3.3.0",
-    "typescript": "5.0.2"
+    "typescript": "5.0.2",
+    "yarn": "^1.22.19"
   }
 }

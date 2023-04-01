@@ -6,6 +6,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import isMobile from "ismobilejs";
 
 export const ScreenOrientation = ({
   element,
@@ -27,31 +28,6 @@ export const ScreenOrientation = ({
     }
   );
 
-  const [canChangeOrientation, setCanChangeOrientation] = useState(false);
-
-  useEffect(() => {
-    const tryOrientationChange = async () => {
-      let caughtError = false;
-      if (typeof window === "undefined") {
-        return caughtError;
-      }
-
-      try {
-        // await element.current?.requestFullscreen();
-        // await window.screen?.orientation?.lock("landscape-primary");
-      } catch (e) {
-        alert(e);
-        caughtError = true;
-      }
-
-      return !caughtError;
-    };
-
-    tryOrientationChange().then((can) => {
-      setCanChangeOrientation(can);
-    });
-  }, [element]);
-
   const handleOrientationChange = useCallback(async () => {
     await element.current?.requestFullscreen();
 
@@ -62,13 +38,13 @@ export const ScreenOrientation = ({
       });
   }, [element]);
 
-  if (!canChangeOrientation) {
+  if (typeof window === "undefined" || !isMobile(window.navigator).any) {
     return null;
   }
 
   return (
     <button className={clsx("p-2")} onClick={handleOrientationChange}>
-      {String(window.orientation > 1)} {orientationType}
+      {orientationType}
     </button>
   );
 };
