@@ -37,8 +37,8 @@ export const ScreenOrientation = ({
       }
 
       try {
-        await element.current?.requestFullscreen();
-        await window.screen?.orientation?.lock("landscape-primary");
+        // await element.current?.requestFullscreen();
+        // await window.screen?.orientation?.lock("landscape-primary");
       } catch (e) {
         alert(e);
         caughtError = true;
@@ -68,7 +68,7 @@ export const ScreenOrientation = ({
 
   return (
     <button className={clsx("p-2")} onClick={handleOrientationChange}>
-      {orientationType}
+      {String(window.orientation > 1)} {orientationType}
     </button>
   );
 };
