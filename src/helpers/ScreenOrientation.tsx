@@ -1,7 +1,18 @@
 import clsx from "clsx";
-import { useSyncExternalStore } from "react";
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
-export const ScreenOrientation = () => {
+export const ScreenOrientation = ({
+  element,
+}: {
+  element: RefObject<HTMLElement>;
+}) => {
   const orientationType = useSyncExternalStore<OrientationType>(
     (cb) => {
       window.screen.orientation.addEventListener("change", cb);
@@ -17,13 +28,42 @@ export const ScreenOrientation = () => {
     }
   );
 
-  const handleOrientationChange = () => {
+  const [canChangeOrientation, setCanChangeOrientation] = useState(false);
+
+  useEffect(() => {
+    const tryOrientationChange = async () => {
+      let caughtError = false;
+      if (typeof window === "undefined") {
+        return caughtError;
+      }
+
+      try {
+        await window.screen?.orientation?.lock("landscape-primary");
+      } catch (e) {
+        caughtError = true;
+      }
+
+      return !caughtError;
+    };
+
+    tryOrientationChange().then((can) => {
+      setCanChangeOrientation(can);
+    });
+  }, []);
+
+  const handleOrientationChange = useCallback(() => {
+    element.current?.requestFullscreen();
+
     window.screen?.orientation
       ?.lock("landscape-primary")
       .catch(function (error) {
         alert(error);
       });
-  };
+  }, [element]);
+  console.log({ canChangeOrientation });
+  if (!canChangeOrientation) {
+    return null;
+  }
 
   return (
     <button className={clsx("p-2")} onClick={handleOrientationChange}>
